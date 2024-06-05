@@ -12,16 +12,16 @@
 #include "itersolve.h" // struct stepper_kinematics
 #include "trapq.h" // move_get_coord
 
-struct winch_stepper {
+struct hingebot_stepper {
     struct stepper_kinematics sk;
     struct coord anchor;
 };
 
 static double
-winch_stepper_calc_position(struct stepper_kinematics *sk, struct move *m
+hingebot_stepper_calc_position(struct stepper_kinematics *sk, struct move *m
                             , double move_time)
 {
-    struct winch_stepper *hs = container_of(sk, struct winch_stepper, sk);
+    struct hingebot_stepper *hs = container_of(sk, struct hingebot_stepper, sk);
     struct coord c = move_get_coord(m, move_time);
     double dx = hs->anchor.x - c.x, dy = hs->anchor.y - c.y;
     double dz = hs->anchor.z - c.z;
@@ -29,14 +29,14 @@ winch_stepper_calc_position(struct stepper_kinematics *sk, struct move *m
 }
 
 struct stepper_kinematics * __visible
-winch_stepper_alloc(double anchor_x, double anchor_y, double anchor_z)
+hingebot_stepper_alloc(double anchor_x, double anchor_y, double anchor_z)
 {
-    struct winch_stepper *hs = malloc(sizeof(*hs));
+    struct hingebot_stepper *hs = malloc(sizeof(*hs));
     memset(hs, 0, sizeof(*hs));
     hs->anchor.x = anchor_x;
     hs->anchor.y = anchor_y;
     hs->anchor.z = anchor_z;
-    hs->sk.calc_position_cb = winch_stepper_calc_position;
+    hs->sk.calc_position_cb = hingebot_stepper_calc_position;
     hs->sk.active_flags = AF_X | AF_Y | AF_Z;
     return &hs->sk;
 }
