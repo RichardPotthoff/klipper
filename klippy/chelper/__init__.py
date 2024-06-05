@@ -140,6 +140,10 @@ defs_kin_winch = """
         , double anchor_y, double anchor_z);
 """
 
+defs_kin_hingebot = """
+    struct stepper_kinematics *hingebot_stepper_alloc(double anchor_x
+        , double anchor_y, double anchor_z);
+"""
 defs_kin_extruder = """
     struct stepper_kinematics *extruder_stepper_alloc(void);
     void extruder_set_pressure_advance(struct stepper_kinematics *sk
@@ -221,8 +225,8 @@ defs_all = [
     defs_pyhelper, defs_serialqueue, defs_std, defs_stepcompress,
     defs_itersolve, defs_trapq, defs_trdispatch,
     defs_kin_cartesian, defs_kin_corexy, defs_kin_corexz, defs_kin_delta,
-    defs_kin_deltesian, defs_kin_polar, defs_kin_rotary_delta, defs_kin_winch,
-    defs_kin_extruder, defs_kin_shaper, defs_kin_idex,
+    defs_kin_deltesian, defs_kin_hingebot, defs_kin_polar, defs_kin_rotary_delta,
+	defs_kin_winch, defs_kin_extruder, defs_kin_shaper, defs_kin_idex,
 ]
 
 # Update filenames to an absolute path
