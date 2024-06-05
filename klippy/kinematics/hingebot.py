@@ -19,7 +19,7 @@ class HingebotKinematics:
             self.steppers.append(s)
             a = tuple([stepper_config.getfloat('anchor_' + n) for n in 'xyz'])
             self.anchors.append(a)
-            s.setup_itersolve('winch_stepper_alloc', *a)
+            s.setup_itersolve('hingebot_stepper_alloc', *a)
             s.set_trapq(toolhead.get_trapq())
             toolhead.register_step_generator(s.generate_steps)
         # Setup boundary checks
