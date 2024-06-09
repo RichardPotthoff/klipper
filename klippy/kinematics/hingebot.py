@@ -20,9 +20,9 @@ class HingebotKinematics:
             s = stepper.PrinterStepper(stepper_config)
             self.steppers.append(s)
             if axis=='x':
-              a=tuple(stepper_config.getfloat('anchor'),0.0,0.0)
+              a=tuple([stepper_config.getfloat('anchor'),0.0,0.0])
             elif axis=='y':
-              a=tuple(0.0,stepper_config.getfloat('anchor'),0.0)
+              a=tuple([0.0,stepper_config.getfloat('anchor'),0.0])
             else:
               a = tuple([stepper_config.getfloat('anchor_' + n) for n in 'xyz'])
             self.anchors.append(a)
