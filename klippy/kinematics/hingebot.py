@@ -12,14 +12,19 @@ class HingebotKinematics:
         self.anchors = []
         stepper_x_config = config.getsection('stepper_x')
         stepper_y_config = config.getsection('stepper_y')
-        for i in range(26):
-            name = 'stepper_' + chr(ord('a') + i)
+        for i,axis in enumerate('xycdefg'):
+            name = 'stepper_' + axis
             if i >= 3 and not config.has_section(name):
                 break
             stepper_config = config.getsection(name)
             s = stepper.PrinterStepper(stepper_config)
             self.steppers.append(s)
-            a = tuple([stepper_config.getfloat('anchor_' + n) for n in 'xyz'])
+            if axis=='x':
+              a=tuple(stepper_config.getfloat('anchor'),0.0,0.0)
+            elif axis=='y':
+              a=tuple(0.0,stepper_config.getfloat('anchor'),0.0)
+            else:
+              a = tuple([stepper_config.getfloat('anchor_' + n) for n in 'xyz'])
             self.anchors.append(a)
             s.setup_itersolve('hingebot_stepper_alloc', *a)
             s.set_trapq(toolhead.get_trapq())
