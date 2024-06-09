@@ -12,7 +12,7 @@ class HingebotKinematics:
         self.anchors = []
         stepper_x_config = config.getsection('stepper_x')
         stepper_y_config = config.getsection('stepper_y')
-        for i,axis in enumerate('xycdefg'):
+        for i,axis in enumerate('xyz'):
             name = 'stepper_' + axis
             if i >= 3 and not config.has_section(name):
                 break
@@ -24,9 +24,12 @@ class HingebotKinematics:
             elif axis=='y':
               a=tuple([0.0,stepper_config.getfloat('anchor'),0.0])
             else:
-              a = tuple([stepper_config.getfloat('anchor_' + n) for n in 'xyz'])
+              a = (0.0,0.0,2000.0)#dummy until 'calc_position' is updated
             self.anchors.append(a)
-            s.setup_itersolve('hingebot_stepper_alloc', *a)
+            if axis in 'xy':
+              s.setup_itersolve('hingebot_stepper_alloc', *a)
+            else:
+              s.setup_itersolve('cartesian_stepper_alloc',axis.encode()) 
             s.set_trapq(toolhead.get_trapq())
             toolhead.register_step_generator(s.generate_steps)
         # Setup boundary checks

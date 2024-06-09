@@ -24,8 +24,8 @@ hingebot_stepper_calc_position(struct stepper_kinematics *sk, struct move *m
     struct hingebot_stepper *hs = container_of(sk, struct hingebot_stepper, sk);
     struct coord c = move_get_coord(m, move_time);
     double dx = hs->anchor.x - c.x, dy = hs->anchor.y - c.y;
-    double dz = hs->anchor.z - c.z;
-    return sqrt(dx*dx + dy*dy + dz*dz);
+//    double dz = hs->anchor.z - c.z;
+    return sqrt(dx*dx + dy*dy);// + dz*dz);
 }
 
 struct stepper_kinematics * __visible
@@ -37,6 +37,6 @@ hingebot_stepper_alloc(double anchor_x, double anchor_y, double anchor_z)
     hs->anchor.y = anchor_y;
     hs->anchor.z = anchor_z;
     hs->sk.calc_position_cb = hingebot_stepper_calc_position;
-    hs->sk.active_flags = AF_X | AF_Y | AF_Z;
+    hs->sk.active_flags = AF_X | AF_Y ;//| AF_Z;
     return &hs->sk;
 }
