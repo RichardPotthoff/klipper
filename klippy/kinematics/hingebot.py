@@ -10,6 +10,8 @@ class HingebotKinematics:
         # Setup steppers at each anchor
         self.steppers = []
         self.anchors = []
+        stepper_x_config = config.getsection('stepper_x')
+        stepper_y_config = config.getsection('stepper_y')
         for i in range(26):
             name = 'stepper_' + chr(ord('a') + i)
             if i >= 3 and not config.has_section(name):
