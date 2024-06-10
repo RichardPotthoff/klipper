@@ -51,6 +51,11 @@ class HingebotKinematics:
         self.axes_min = toolhead.Coord(*[min(a) for a in acoords], e=0.)
         self.axes_max = toolhead.Coord(*[max(a) for a in acoords], e=0.)
         self.set_position([0., 0., 0.], ())
+        self.max_z_velocity = config.getfloat('max_z_velocity', max_velocity,
+                                              above=0., maxval=max_velocity)
+        self.max_z_accel = config.getfloat('max_z_accel', max_accel,
+                                           above=0., maxval=max_accel)
+
     def get_steppers(self):
         return list(self.steppers)
     def calc_position(self, stepper_positions):
@@ -66,7 +71,10 @@ class HingebotKinematics:
         homing_state.set_homed_position([0., 0., 0.])
     def check_move(self, move):
         # XXX - boundary checks and speed limits not implemented
-        pass
+        #pass
+        z_ratio = move.move_d / abs(move.axes_d[2])
+        move.limit_speed(
+            self.max_z_velocity * z_ratio, self.max_z_accel * z_ratio)
     def get_status(self, eventtime):
         # XXX - homed_checks and rail limits not implemented
         return {
