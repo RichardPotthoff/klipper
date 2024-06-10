@@ -142,7 +142,7 @@ defs_kin_winch = """
 
 defs_kin_hingebot = """
     struct stepper_kinematics *hingebot_stepper_alloc(double anchor_x
-        , double anchor_y, double anchor_z);
+        , double anchor_y, double anchor_z, double r);
 """
 defs_kin_extruder = """
     struct stepper_kinematics *extruder_stepper_alloc(void);
