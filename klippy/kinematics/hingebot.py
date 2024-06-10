@@ -51,6 +51,8 @@ class HingebotKinematics:
         self.axes_min = toolhead.Coord(*[min(a) for a in acoords], e=0.)
         self.axes_max = toolhead.Coord(*[max(a) for a in acoords], e=0.)
         self.set_position([0., 0., 0.], ())
+        # Setup boundary checks
+        max_velocity, max_accel = toolhead.get_max_velocity()
         self.max_z_velocity = config.getfloat('max_z_velocity', max_velocity,
                                               above=0., maxval=max_velocity)
         self.max_z_accel = config.getfloat('max_z_accel', max_accel,
