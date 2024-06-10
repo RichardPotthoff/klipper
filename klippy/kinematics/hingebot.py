@@ -3,7 +3,7 @@
 # Copyright (C) 2018-2021  Kevin O'Connor <kevin@koconnor.net>
 #
 # This file may be distributed under the terms of the GNU GPLv3 license.
-import stepper, mathutil
+import stepper, mathutil, math
 
 class HingebotKinematics:
     def __init__(self, toolhead, config):
@@ -31,8 +31,8 @@ class HingebotKinematics:
               sz=s
               a=(0.0,0.0,2000.0)# dummy 
             self.anchors.append(a)
-        rx=rd_x/(2*pi)
-        ry=rd_y/(2*pi)
+        rx=rd_x/(2*math.pi)
+        ry=rd_y/(2*math.pi)
         if (ax<0)==(ay<0):
           rx=-rx#negative radius means capstan is on the left side of the cable
         else:
