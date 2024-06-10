@@ -15,6 +15,8 @@
 struct hingebot_stepper {
     struct stepper_kinematics sk;
     struct coord anchor;
+    double r;
+    double ang0;
 };
 
 static double
@@ -29,13 +31,15 @@ hingebot_stepper_calc_position(struct stepper_kinematics *sk, struct move *m
 }
 
 struct stepper_kinematics * __visible
-hingebot_stepper_alloc(double anchor_x, double anchor_y, double anchor_z)
+hingebot_stepper_alloc(double anchor_x, double anchor_y, double anchor_z, double r)
 {
     struct hingebot_stepper *hs = malloc(sizeof(*hs));
     memset(hs, 0, sizeof(*hs));
     hs->anchor.x = anchor_x;
     hs->anchor.y = anchor_y;
     hs->anchor.z = anchor_z;
+    hs->r=r;
+    hs->ang0=atan2(-anchor_y,-anchor_x);
     hs->sk.calc_position_cb = hingebot_stepper_calc_position;
     hs->sk.active_flags = AF_X | AF_Y ;//| AF_Z;
     return &hs->sk;

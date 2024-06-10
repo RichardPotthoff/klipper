@@ -10,8 +10,6 @@ class HingebotKinematics:
         # Setup steppers at each anchor
         self.steppers = []
         self.anchors = []
-        stepper_x_config = config.getsection('stepper_x')
-        stepper_y_config = config.getsection('stepper_y')
         for i,axis in enumerate('xyz'):
             name = 'stepper_' + axis
             if i >= 3 and not config.has_section(name):
@@ -20,18 +18,34 @@ class HingebotKinematics:
             s = stepper.PrinterStepper(stepper_config)
             self.steppers.append(s)
             if axis=='x':
-              a=tuple([stepper_config.getfloat('anchor'),0.0,0.0])
+              sx=s
+              rd_x=stepper_config.getfloat('rotation_distance')
+              ax=stepper_config.getfloat('anchor')
+              a=(ax,0.0,0.0)
             elif axis=='y':
-              a=tuple([0.0,stepper_config.getfloat('anchor'),0.0])
+              sy=s
+              rd_y=stepper_config.getfloat('rotation_distance')
+              ay=stepper_config.getfloat('anchor')
+              a=(0.0,ay,0.0)
             else:
-              a = (0.0,0.0,2000.0)#dummy until 'calc_position' is updated
+              sz=s
+              a=(0.0,0.0,2000.0)# dummy 
             self.anchors.append(a)
-            if axis in 'xy':
-              s.setup_itersolve('hingebot_stepper_alloc', *a)
-            else:
-              s.setup_itersolve('cartesian_stepper_alloc',axis.encode()) 
-            s.set_trapq(toolhead.get_trapq())
-            toolhead.register_step_generator(s.generate_steps)
+        rx=rd_x/(2*pi)
+        ry=rd_y/(2*pi)
+        if (ax<0)==(ay<0):
+          rx=-rx#negative radius means capstan is on the left side of the cable
+        else:
+          ry=-ry 
+        sx.setup_itersolve('hingebot_stepper_alloc',ax,0.0,0.0,rx)
+        sx.set_trapq(toolhead.get_trapq())
+        toolhead.register_step_generator(sx.generate_steps)
+        sy.setup_itersolve('hingebot_stepper_alloc',0.0,ay,0.0,ry)
+        sy.set_trapq(toolhead.get_trapq())
+        toolhead.register_step_generator(sy.generate_steps)
+        sz.setup_itersolve('cartesian_stepper_alloc',axis.encode()) 
+        sz.set_trapq(toolhead.get_trapq())
+        toolhead.register_step_generator(sz.generate_steps)
         # Setup boundary checks
         acoords = list(zip(*self.anchors))
         self.axes_min = toolhead.Coord(*[min(a) for a in acoords], e=0.)
