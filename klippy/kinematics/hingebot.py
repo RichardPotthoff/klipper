@@ -74,6 +74,9 @@ class HingebotKinematics:
     def check_move(self, move):
         # XXX - boundary checks and speed limits not implemented
         #pass
+        if not move.axes_d[2]:
+            # Normal XY move - use defaults
+            return
         z_ratio = move.move_d / abs(move.axes_d[2])
         move.limit_speed(
             self.max_z_velocity * z_ratio, self.max_z_accel * z_ratio)
