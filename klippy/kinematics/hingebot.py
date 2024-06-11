@@ -21,16 +21,14 @@ class HingebotKinematics:
               sx=s
               rd_x=stepper_config.getfloat('rotation_distance')
               ax=stepper_config.getfloat('anchor')
-              a=(ax,0.0,0.0)
+              self.anchors.append((ax,0.0,0.0))
             elif axis=='y':
               sy=s
               rd_y=stepper_config.getfloat('rotation_distance')
               ay=stepper_config.getfloat('anchor')
-              a=(0.0,ay,0.0)
+              self.anchors.append((0.0,ay,0.0))
             else:
               sz=s
-              a=(0.0,0.0,2000.0)# dummy 
-            self.anchors.append(a)
         rx=rd_x/(2*math.pi)
         ry=rd_y/(2*math.pi)
         if (ax<0)==(ay<0):
@@ -61,9 +59,28 @@ class HingebotKinematics:
     def get_steppers(self):
         return list(self.steppers)
     def calc_position(self, stepper_positions):
-        # Use only first three steppers to calculate cartesian position
-        pos = [stepper_positions[rail.get_name()] for rail in self.steppers[:3]]
-        return mathutil.trilateration(self.anchors[:3], [sp*sp for sp in pos])
+        def sss(c,a,b):#triangle with 3 sides: return angle opposite first side 'c'
+            cosgamma=(a*a+b*b-c*c)/(2*a*b)
+            return cosgamma 
+        def intersect_circles(c1x,c1y,r1,c2x,c2y,r2):# intersection point of 2 circles
+            dx,dy=c1x-c2x,c1y-c2y
+            dl=sqrt(dx*dx+dy*dy)
+            ex,ey=dx/dl,dy/dl 
+            cos1=sss(r1,dl,r2)
+            sin1=sqrt(1.0-cos1*cos1)
+            p1x,p1y=c2x+r2*(ex*cos1+ey*sin1),c2y+r2*(-ex*sin1+ey*cos1)
+            p2x,p2y=c2x+r2*(ex*cos1-ey*sin1),c2y+r2*(ex*sin1+ey*cos1)
+            if (p1x*p1x+p1y*p1y)<(p2x*p2x+p2y*p2y):#point closest to the origin
+                return p1x,p1y
+            else:
+                return p2x,p2y
+        r1=stepper_positions['stepper_x']
+        r2=stepper_positions['stepper_y']
+        z=stepper_positions['stepper_z']
+        c1x,c1y=self.anchors[0][:2]
+        c2x,c2y=self.anchors[1][:2]
+        x,y=intersect_circles(c1x,c1y,r1,c2x,c2y,r2)
+        return x,y,z
     def set_position(self, newpos, homing_axes):
         for s in self.steppers:
             s.set_position(newpos)
