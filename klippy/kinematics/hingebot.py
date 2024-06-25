@@ -35,10 +35,10 @@ class HingebotKinematics:
           rx=-rx#negative radius means capstan is on the left side of the cable
         else:
           ry=-ry 
-        sx.setup_itersolve('hingebot_stepper_alloc',ax,0.0,0.0,rx)
+        sx.setup_itersolve('hingebot_stepper_alloc',ax,math.copysign(rx,ay),0.0,rx)
         sx.set_trapq(toolhead.get_trapq())
         toolhead.register_step_generator(sx.generate_steps)
-        sy.setup_itersolve('hingebot_stepper_alloc',0.0,ay,0.0,ry)
+        sy.setup_itersolve('hingebot_stepper_alloc',math.copysign(ry,ax),ay,0.0,ry)
         sy.set_trapq(toolhead.get_trapq())
         toolhead.register_step_generator(sy.generate_steps)
         sz.setup_itersolve('cartesian_stepper_alloc',axis.encode()) 

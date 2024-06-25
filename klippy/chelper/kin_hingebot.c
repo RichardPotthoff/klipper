@@ -4,7 +4,7 @@
 //
 // This file may be distributed under the terms of the GNU GPLv3 license.
 
-#include <math.h> // sqrt
+#include <math.h> // sqrt, atan2
 #include <stddef.h> // offsetof
 #include <stdlib.h> // malloc
 #include <string.h> // memset
@@ -26,8 +26,12 @@ hingebot_stepper_calc_position(struct stepper_kinematics *sk, struct move *m
     struct hingebot_stepper *hs = container_of(sk, struct hingebot_stepper, sk);
     struct coord c = move_get_coord(m, move_time);
     double dx = hs->anchor.x - c.x, dy = hs->anchor.y - c.y;
-//    double dz = hs->anchor.z - c.z;
-    return sqrt(dx*dx + dy*dy);// + dz*dz);
+    double ucl = sqrt(dx*dx+dy*dy-hs->r*hs->r); // length of unwound cable
+    double dl_ang=atan2(-dy,-dx) - hs->ang0; //angle difference between capstan->origin and capstan->point
+    if (dl_ang < -M_PI) {dl_ang+=2*M_PI;}
+    else if (dl_ang > M_PI) {dl_ang-=2*M_PI;}
+    double rl_ang=atan2(hs->r,ucl);
+    return hs->r*(dl_ang+rl_ang) + ucl;
 }
 
 struct stepper_kinematics * __visible
