@@ -25,10 +25,12 @@ class HingebotKinematics:
           rx=-rx#negative radius means capstan is on the left side of the cable
         else:
           ry=-ry 
-        sx.r=rx
-        sx.C=ax+1j*math.copysign(rx,ay)
+        sx.r=rx # capstan radius 
+        sx.C=ax+1j*math.copysign(rx,ay) #center coordinates of capstan
+        sx.ang0=math.atan2(-sx.C.imag,-sx.C.real) #angle towards origin 
         sy.r=ry 
         sy.C=math.copysign(ry,ax)+1j*ay
+        sy.ang0=math.atan2(-sy.C.imag,-sy.C.real)
         sx.setup_itersolve('hingebot_stepper_alloc',sx.C.real,sx.C.imag,0.0,sx.r)
         sx.set_trapq(toolhead.get_trapq())
         toolhead.register_step_generator(sx.generate_steps)
@@ -52,7 +54,11 @@ class HingebotKinematics:
 
     def get_steppers(self):
         return list(self.steppers)
-    def calc_position(self, stepper_positions):
+    def calc_position(self, stepper_positions,p_guess=0.0+0.0j,max_it=10,eps=1e-6):
+        from math import sqrt, pi, sin, cos, atan2, copysign
+        def evolvent(t,t0=0.0,r=1.0):
+            tt0=t+t0
+            return r*(cos(tt0)+t*sin(tt0)+1j*(sin(tt0)-t*cos(tt0)))
         def sss(c,a,b):#triangle with 3 sides: return angle opposite first side 'c'
             cosgamma=(a*a+b*b-c*c)/(2*a*b)
             return cosgamma 
@@ -68,13 +74,29 @@ class HingebotKinematics:
                 return p1x,p1y
             else:
                 return p2x,p2y
-        Rx=stepper_positions['stepper_x']
-        Ry=stepper_positions['stepper_y']
+        spx=stepper_positions['stepper_x']
+        spy=stepper_positions['stepper_y']
         z=stepper_positions['stepper_z']
-        Cx=self.steppers[0].C
-        Cy=self.steppers[1].C
-        x,y=intersect_circles(Cx.real,0.0,Rx,0.0,Cy.imag,Ry)
-        return x,y,z
+        pe=[None]*2#cable end point
+        pt=[None]*2#cable tangent point (at capstan)
+        ucl=[None]*2#unwound cable length
+        for j in range(max_it):
+          for i,(stepper,sp) in enumerate(zip(self.steppers[:2],[spx,spy])):
+            drot1=(p_guess-stepper.C)*((abs(p_guess-stepper.C)**2-
+                   stepper.r**2)**0.5+1j*stepper.r)
+            pt[i] = -1j*stepper.r * drot1/abs(drot1) + stepper.C #tangent point = center of approx. circle
+            drot=drot1*(0+0j-stepper.C).conjugate()#rotation relative to stepper
+            ucl[i]=sp-stepper.r*atan2(drot.imag,drot.real)# unwound cable length = radius of approx. circle
+            pe[i]=evolvent(t=-ucl[i]/stepper.r, 
+                    t0=sp/stepper.r+stepper.ang0-copysign(pi/2,stepper.r), 
+                    r=abs(stepper.r)
+                    ) + stepper.C
+          newx,newy=intersect_circles(pt[0].real,pt[0].imag,ucl[0],
+                      pt[1].real,pt[1].imag,ucl[1])
+          p_guess=newx+1j*newy
+          error=abs(pe[0]-pe[1])
+          if error<eps: break
+        return newx,newy,z
     def set_position(self, newpos, homing_axes):
         for s in self.steppers:
             s.set_position(newpos)
