@@ -8,40 +8,33 @@ import stepper, mathutil, math
 class HingebotKinematics:
     def __init__(self, toolhead, config):
         # Setup steppers at each anchor
-        self.steppers = []
-        self.anchors = []
-        for i,axis in enumerate('xyz'):
-            name = 'stepper_' + axis
-            if i >= 3 and not config.has_section(name):
-                break
-            stepper_config = config.getsection(name)
-            s = stepper.PrinterStepper(stepper_config)
-            self.steppers.append(s)
-            if axis=='x':
-              sx=s
-              rd_x=stepper_config.getfloat('rotation_distance')
-              ax=stepper_config.getfloat('anchor')
-              self.anchors.append((ax,0.0,0.0))
-            elif axis=='y':
-              sy=s
-              rd_y=stepper_config.getfloat('rotation_distance')
-              ay=stepper_config.getfloat('anchor')
-              self.anchors.append((0.0,ay,0.0))
-            else:
-              sz=s
+        stepper_config = config.getsection('stepper_x')
+        sx = stepper.PrinterStepper(stepper_config)
+        rd_x=stepper_config.getfloat('rotation_distance')
+        ax=stepper_config.getfloat('anchor')
+        stepper_config = config.getsection('stepper_y')
+        sy = stepper.PrinterStepper(stepper_config)        
+        rd_y=stepper_config.getfloat('rotation_distance')
+        ay=stepper_config.getfloat('anchor')
+        stepper_config = config.getsection('stepper_z')
+        sz = stepper.PrinterStepper(stepper_config)
         rx=rd_x/(2*math.pi)
         ry=rd_y/(2*math.pi)
         if (ax<0)==(ay<0):
           rx=-rx#negative radius means capstan is on the left side of the cable
         else:
           ry=-ry 
-        sx.setup_itersolve('hingebot_stepper_alloc',ax,math.copysign(rx,ay),0.0,rx)
+        sx.r=rx
+        sx.C=ax+1j*math.copysign(rx,ay)
+        sy.r=ry 
+        sy.C=math.copysign(ry,ax)+1j*ay
+        sx.setup_itersolve('hingebot_stepper_alloc',sx.C.real,sx.C.imag,0.0,sx.r)
         sx.set_trapq(toolhead.get_trapq())
         toolhead.register_step_generator(sx.generate_steps)
-        sy.setup_itersolve('hingebot_stepper_alloc',math.copysign(ry,ax),ay,0.0,ry)
+        sy.setup_itersolve('hingebot_stepper_alloc',sy.C.real,sy.C.imag,0.0,sy.r)
         sy.set_trapq(toolhead.get_trapq())
         toolhead.register_step_generator(sy.generate_steps)
-        sz.setup_itersolve('cartesian_stepper_alloc',axis.encode()) 
+        sz.setup_itersolve('cartesian_stepper_alloc','z'.encode()) 
         sz.set_trapq(toolhead.get_trapq())
         toolhead.register_step_generator(sz.generate_steps)
         # Setup boundary checks
@@ -55,6 +48,7 @@ class HingebotKinematics:
                                               above=0., maxval=max_velocity)
         self.max_z_accel = config.getfloat('max_z_accel', max_accel,
                                            above=0., maxval=max_accel)
+        self.steppers=[sx,sy,sz]
 
     def get_steppers(self):
         return list(self.steppers)
@@ -74,12 +68,12 @@ class HingebotKinematics:
                 return p1x,p1y
             else:
                 return p2x,p2y
-        r1=stepper_positions['stepper_x']
-        r2=stepper_positions['stepper_y']
+        Rx=stepper_positions['stepper_x']
+        Ry=stepper_positions['stepper_y']
         z=stepper_positions['stepper_z']
-        c1x,c1y=self.anchors[0][:2]
-        c2x,c2y=self.anchors[1][:2]
-        x,y=intersect_circles(c1x,c1y,r1,c2x,c2y,r2)
+        Cx=self.steppers[0].C
+        Cy=self.steppers[1].C
+        x,y=intersect_circles(Cx.real,0.0,Rx,0.0,Cy.imag,Ry)
         return x,y,z
     def set_position(self, newpos, homing_axes):
         for s in self.steppers:
