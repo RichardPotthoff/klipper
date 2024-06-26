@@ -18,6 +18,7 @@ class HingebotKinematics:
         ay=stepper_config.getfloat('anchor')
         stepper_config = config.getsection('stepper_z')
         sz = stepper.PrinterStepper(stepper_config)
+        self.steppers=[sx,sy,sz]
         rx=rd_x/(2*math.pi)
         ry=rd_y/(2*math.pi)
         if (ax<0)==(ay<0):
@@ -47,7 +48,7 @@ class HingebotKinematics:
                                               above=0., maxval=max_velocity)
         self.max_z_accel = config.getfloat('max_z_accel', max_accel,
                                            above=0., maxval=max_accel)
-        self.steppers=[sx,sy,sz]
+        
 
     def get_steppers(self):
         return list(self.steppers)
