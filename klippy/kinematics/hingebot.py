@@ -38,9 +38,8 @@ class HingebotKinematics:
         sz.set_trapq(toolhead.get_trapq())
         toolhead.register_step_generator(sz.generate_steps)
         # Setup boundary checks
-        acoords = list(zip(*self.anchors))
-        self.axes_min = toolhead.Coord(*[min(a) for a in acoords], e=0.)
-        self.axes_max = toolhead.Coord(*[max(a) for a in acoords], e=0.)
+        self.axes_min = toolhead.Coord(-abs(ax),-abs(ay),-1.0, e=0.)
+        self.axes_max = toolhead.Coord(abs(ax),abs(ay),1000.0, e=0.)
         self.set_position([0., 0., 0.], ())
         # Setup boundary checks
         max_velocity, max_accel = toolhead.get_max_velocity()
